@@ -15,13 +15,23 @@ class ListTableViewController: UITableViewController, VKSdkDelegate, VKSdkUIDele
     
     var searchController: UISearchController!
     
+    
     var AppID:String! = "6265700";
     let SCOPE = ["friends"];
     var users: VKUsersArray!
+    var user: VKUser!
+    var count: Int = 0// Кол-во элементов в массиве VKUsersArray(users.count не всегда работает правильно
+    var loadMoreStatus = false
+    var offset: Int = 0
+    var check = true
+    
+     @IBOutlet weak var spinner: UIActivityIndicatorView!
     
 
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+       
         searchController = UISearchController(searchResultsController: nil);
         searchController.delegate = self;
         searchController.searchBar.delegate = self;
@@ -29,6 +39,16 @@ class ListTableViewController: UITableViewController, VKSdkDelegate, VKSdkUIDele
         searchController.dimsBackgroundDuringPresentation = false;
         searchController.hidesNavigationBarDuringPresentation = false;
         self.navigationItem.titleView = searchController.searchBar;
+        self.spinner.isHidden = true;
+        
+        self.navigationController?.navigationBar.barTintColor = UIColor(red: 80.0/255.0, green: 114.0/255.0, blue: 153.0/255.0, alpha: 1.0)
+        self.navigationController?.navigationBar.tintColor = UIColor.white
+        
+        refreshControl = UIRefreshControl()
+        refreshControl?.attributedTitle = NSAttributedString(string: "Идет обновление...")
+        refreshControl?.addTarget(self, action: #selector(self.refreshData), for: UIControlEvents.valueChanged)
+        tableView.refreshControl = refreshControl
+        
 
         
         
@@ -37,34 +57,9 @@ class ListTableViewController: UITableViewController, VKSdkDelegate, VKSdkUIDele
         sdkInstance?.uiDelegate = self;
         self.initWorkingBlock { (finished) -> Void in
         }
-//
-//        let isLogged = VKSdk.isLoggedIn()
-//        if isLogged == true {
-//
-//            print("Пользователь авторизован")
-//
-//
-//        } else if isLogged == false {
-//
-//            print("Пользователь не авторизован")
-//            VKSdk.authorize(SCOPE);
-//            print(VKSdk.isLoggedIn());
-//
-//        }
-//        let request:VKRequest = VKApi.users().get();
-//        var response:VKResponse<VKApiObject>;
-//        var error:Error;
-//        print("hiii");
-//
-//        request.execute(resultBlock: {(response) -> Void in print(response?.json)}, errorBlock: {(error) -> Void in print("er")})
-        // Do any additional setup after loading the view, typically from a nib.
 
-        // Uncomment the following line to preserve selection between presentations
-        // self.clearsSelectionOnViewWillAppear = false
-
-        // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
-        // self.navigationItem.rightBarButtonItem = self.editButtonItem
     }
+    
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
@@ -78,29 +73,47 @@ class ListTableViewController: UITableViewController, VKSdkDelegate, VKSdkUIDele
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         if VKSdk.isLoggedIn() {
+            self.check = true
+            self.offset = 0
             let userId = VKSdk.accessToken().userId
             if (userId != nil) {
-                let req:VKRequest = VKApi.users().search([VK_API_Q : searchBar.text, VK_API_COUNT : 20])
+                let req:VKRequest = VKApi.users().search([VK_API_Q : searchBar.text, VK_API_COUNT : 20, VK_API_FIELDS: "photo_100"])
                 req.setPreferredLang("ru")
                 req.execute(resultBlock: { (response) -> Void in
-                    print(response?.parsedModel);
-                    print(response?.json)
                     self.users = (response?.parsedModel)! as! VKUsersArray;
-                    self.tableView.reloadData();
-                    
-                    
-                    
-                   
-                    
-                    //                                    let user = response?.parsedModel.fields[0] as! VKUser
-                    //
-                    //                                    print("Пользователь ВК: \(user.fields)")
-                    
+                    self.setCount()
+                    self.refreshData()
                 }, errorBlock: { (error) -> Void in
                     print("Error2: \(error)")
                 })
             }
         }
+    }
+    
+
+    
+    @objc func refreshData() {
+        self.offset = 0
+        self.count = 0
+        var users: VKUsersArray!
+        let req:VKRequest = VKApi.users().search([VK_API_Q : self.searchController.searchBar.text, VK_API_COUNT : 20, VK_API_OFFSET : self.offset,  VK_API_FIELDS: "photo_100"])
+        DispatchQueue.global(qos: .background).async {
+            req.setPreferredLang("ru")
+            req.execute(resultBlock: { (response) -> Void in
+                self.users = (response?.parsedModel)! as! VKUsersArray;
+                self.setCount()
+                self.tableView.reloadData()
+                
+            }, errorBlock: { (error) -> Void in
+                print("Error2: \(error)")
+            })
+            
+            DispatchQueue.main.async {
+                // this runs on the main queue
+                self.refreshControl?.endRefreshing()
+                
+            }
+    }
     }
     
     
@@ -115,36 +128,57 @@ class ListTableViewController: UITableViewController, VKSdkDelegate, VKSdkUIDele
                 VKSdk.authorize(self.SCOPE as [AnyObject])
             }
             completion(true)
-            self.vkGetUser()
-            print("completion VKSdk.wakeUpSession")
         })
     }
-    func vkGetUser(){
-        if VKSdk.isLoggedIn() {
-            let userId = VKSdk.accessToken().userId
-            if (userId != nil) {
-                VKApi.users().get([VK_API_FIELDS: "first_name, last_name, id, photo_100, sex, bdate, country", VK_API_USER_ID: userId]).execute(resultBlock: { (response) -> Void in
-                    print(response);
-                    print(response?.json);
-                
-                
-                    
-                                    
-//                                    let user = response?.parsedModel.fields[0] as! VKUser
-//
-//                                    print("Пользователь ВК: \(user.fields)")
-                                    
-                                   }, errorBlock: { (error) -> Void in
-                                    print("Error2: \(error)")
-                                   })
+    
+    override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        if self.count > 19{
+            let lastElement = self.count-1
+            if !self.loadMoreStatus && indexPath.row == lastElement {
+                spinner.isHidden = false
+                spinner.startAnimating()
+                self.loadMoreStatus = true
+                loadMoreData()
             }
         }
     }
     
+    
+    func loadMoreData() {
+        if self.check {
+            self.offset += 20
+            var users: VKUsersArray!
+              let req:VKRequest = VKApi.users().search([VK_API_Q : self.searchController.searchBar.text, VK_API_COUNT : 20, VK_API_OFFSET : self.offset,  VK_API_FIELDS: "photo_100"])
+            DispatchQueue.global(qos: .background).async {
+                req.setPreferredLang("ru")
+                req.execute(resultBlock: { (response) -> Void in
+                    users = (response?.parsedModel)! as! VKUsersArray;
+                    self.addToArray(masterUsers: self.users, slaveUsers: users)
+                    self.tableView.reloadData()
+                    
+                }, errorBlock: { (error) -> Void in
+                    print("Error2: \(error)")
+                })
+                
+                DispatchQueue.main.async {
+                    // this runs on the main queue
+                    self.spinner.stopAnimating()
+                    self.loadMoreStatus = false
+                    
+                }
+            }
+        }
+        else{
+            self.spinner.stopAnimating()
+            self.loadMoreStatus = false
+            self.spinner.isHidden = true
+        }
+    }
+    
     func vkSdkAccessAuthorizationFinished(with result: VKAuthorizationResult!){
-        print(result);
+    
         if let token = VKSdk.accessToken(){
-            print(token);
+//            print(token);
             
         }
         
@@ -166,6 +200,7 @@ class ListTableViewController: UITableViewController, VKSdkDelegate, VKSdkUIDele
         // Dispose of any resources that can be recreated.
     }
 
+
     // MARK: - Table view data source
 
     override func numberOfSections(in tableView: UITableView) -> Int {
@@ -175,73 +210,95 @@ class ListTableViewController: UITableViewController, VKSdkDelegate, VKSdkUIDele
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // #warning Incomplete implementation, return the number of rows
-        if (self.users != nil && self.users.count > 0){
-            return (Int(self.users.count))
+        
+       
+        
+        if (self.users != nil){
+            return self.count
         }
-        else{
+        else {
             return 0
         }
     }
 
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
-        if (self.users != nil && self.users.count > 0) {
-            print("hello form cell")
-            let user: VKUser = self.users[UInt(indexPath.row)]
-        
-            cell.textLabel?.text = user.first_name + " " + user.last_name
-        }
 
+
+        let cell = Bundle.main.loadNibNamed("TableViewCell", owner: self, options: nil)?.first as! TableViewCell
+        
+        if (self.users != nil && self.users.count > 0) {
+            let user: VKUser = self.users[UInt(indexPath.row)]
+            let url = URL(string:user.photo_100)
+            let data = try? Data(contentsOf: url!)
+            let image: UIImage = UIImage(data: data!)!
+            
+            cell.mainImageView.image = image
+            cell.mainLabel?.text = user.first_name + " " + user.last_name
+            
+            
+        }
         
 
         return cell
     }
     
-
-    /*
-    // Override to support conditional editing of the table view.
-    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the specified item to be editable.
-        return true
+    func addToArray(masterUsers: VKUsersArray, slaveUsers: VKUsersArray) -> Void {
+        
+        
+        if slaveUsers != nil && slaveUsers.lastObject() != nil{
+            let us1: VKUser = slaveUsers.lastObject()
+            var count: Int = 0;
+            var i:UInt = 0;
+            
+            while slaveUsers[i] != us1 {
+                count = count + 1;
+                masterUsers.add(slaveUsers[i])
+                i += 1;
+            }
+            self.count += count;
+        }
+        else if slaveUsers.lastObject() == nil {
+            self.check = false
+        }
+            
     }
-    */
+    
+    func setCount() -> Void {
+        if self.users != nil{
+            let us1: VKUser = self.users.lastObject()
 
-    /*
-    // Override to support editing the table view.
-    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
-        if editingStyle == .delete {
-            // Delete the row from the data source
-            tableView.deleteRows(at: [indexPath], with: .fade)
-        } else if editingStyle == .insert {
-            // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-        }    
+            var count: Int = 1;
+            var i:UInt = 0;
+            
+            while self.users[i] != us1 {
+                count = count + 1;
+                i += 1;
+            }
+            self.count = count;
+        }
     }
-    */
+    
 
-    /*
-    // Override to support rearranging the table view.
-    override func tableView(_ tableView: UITableView, moveRowAt fromIndexPath: IndexPath, to: IndexPath) {
 
-    }
-    */
-
-    /*
-    // Override to support conditional rearranging of the table view.
-    override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the item to be re-orderable.
-        return true
-    }
-    */
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
+ 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
+        let backitem = UIBarButtonItem()
+        backitem.title = "Назад"
+        navigationItem.backBarButtonItem = backitem
+        
+        if segue.identifier == "goDetail"
+        {
+            let detailVC: DetailViewController =  segue.destination as! DetailViewController
+            detailVC.user = self.user
+            
+        }
     }
-    */
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {        
+        self.user = self.users[UInt(indexPath.row)]
+        performSegue(withIdentifier: "goDetail", sender: self)
+    }
+ 
 
 }
