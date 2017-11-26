@@ -27,6 +27,8 @@ class ListTableViewController: UITableViewController, VKSdkDelegate, VKSdkUIDele
     
      @IBOutlet weak var spinner: UIActivityIndicatorView!
     
+    var RefreshControl: UIRefreshControl!
+    
 
     
     override func viewDidLoad() {
@@ -44,10 +46,11 @@ class ListTableViewController: UITableViewController, VKSdkDelegate, VKSdkUIDele
         self.navigationController?.navigationBar.barTintColor = UIColor(red: 80.0/255.0, green: 114.0/255.0, blue: 153.0/255.0, alpha: 1.0)
         self.navigationController?.navigationBar.tintColor = UIColor.white
         
-        refreshControl = UIRefreshControl()
-        refreshControl?.attributedTitle = NSAttributedString(string: "Идет обновление...")
-        refreshControl?.addTarget(self, action: #selector(self.refreshData), for: UIControlEvents.valueChanged)
-        tableView.refreshControl = refreshControl
+        RefreshControl = UIRefreshControl()
+        RefreshControl?.attributedTitle = NSAttributedString(string: "Идет обновление...")
+        RefreshControl?.addTarget(self, action: #selector(self.refreshData), for: UIControlEvents.valueChanged)
+        tableView.addSubview(RefreshControl)
+//        tableView.refreshControl = refreshControl
         
 
         

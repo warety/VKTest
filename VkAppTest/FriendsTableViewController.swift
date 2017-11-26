@@ -20,14 +20,15 @@ class FriendsTableViewController: UITableViewController {
 
     @IBOutlet weak var spinner: UIActivityIndicatorView!
     
+    var RefreshControl: UIRefreshControl!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        refreshControl = UIRefreshControl()
-        refreshControl?.attributedTitle = NSAttributedString(string: "Идет обновление...")
-        refreshControl?.addTarget(self, action: #selector(self.refreshData), for: UIControlEvents.valueChanged)
-        tableView.refreshControl = refreshControl
+        RefreshControl = UIRefreshControl()
+        RefreshControl?.attributedTitle = NSAttributedString(string: "Идет обновление...")
+        RefreshControl?.addTarget(self, action: #selector(self.refreshData), for: UIControlEvents.valueChanged)
+        tableView.addSubview(RefreshControl)
         
         
         self.spinner.isHidden = false
