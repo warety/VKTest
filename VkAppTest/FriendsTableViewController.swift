@@ -120,7 +120,7 @@ class FriendsTableViewController: UITableViewController {
             
             DispatchQueue.main.async {
                 // this runs on the main queue
-                self.refreshControl?.endRefreshing()
+                self.RefreshControl?.endRefreshing()
                 
             }
          }

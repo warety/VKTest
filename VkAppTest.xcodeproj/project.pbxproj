@@ -241,7 +241,7 @@
 				TargetAttributes = {
 					FA07A2741FC0FA6600AA840C = {
 						CreatedOnToolsVersion = 9.1;
-						ProvisioningStyle = Manual;
+						ProvisioningStyle = Automatic;
 					};
 					FA07A2881FC0FA6600AA840C = {
 						CreatedOnToolsVersion = 9.1;
@@ -538,12 +538,13 @@
 			baseConfigurationReference = ECEBE2690E393BA281B89DE2 /* Pods-VkAppTest.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_STYLE = Manual;
-				DEVELOPMENT_TEAM = "";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = HFBW6X66KR;
 				INFOPLIST_FILE = VkAppTest/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.AlexSechkarev.VkAppTest;
+				PRODUCT_BUNDLE_IDENTIFIER = com.AlexSechkarev2.VkAppTest;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 4.0;
@@ -556,12 +557,13 @@
 			baseConfigurationReference = 3C8F9A021662B0B58DF96DE2 /* Pods-VkAppTest.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_STYLE = Manual;
-				DEVELOPMENT_TEAM = "";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = HFBW6X66KR;
 				INFOPLIST_FILE = VkAppTest/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.AlexSechkarev.VkAppTest;
+				PRODUCT_BUNDLE_IDENTIFIER = com.AlexSechkarev2.VkAppTest;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 4.0;

@@ -27,4 +27,9 @@ class TableViewCell: UITableViewCell {
         // Configure the view for the selected state
     }
     
+    override func layoutSubviews() {
+        contentView.frame = bounds
+        super.layoutSubviews()
+    }
+    
 }

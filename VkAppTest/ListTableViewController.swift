@@ -12,6 +12,7 @@ import SwiftyJSON
 
 
 class ListTableViewController: UITableViewController, VKSdkDelegate, VKSdkUIDelegate,UISearchControllerDelegate, UISearchBarDelegate  {
+
     
     var searchController: UISearchController!
     
@@ -85,7 +86,7 @@ class ListTableViewController: UITableViewController, VKSdkDelegate, VKSdkUIDele
                 req.execute(resultBlock: { (response) -> Void in
                     self.users = (response?.parsedModel)! as! VKUsersArray;
                     self.setCount()
-                    self.refreshData()
+                    self.tableView.reloadData()
                 }, errorBlock: { (error) -> Void in
                     print("Error2: \(error)")
                 })
@@ -96,16 +97,17 @@ class ListTableViewController: UITableViewController, VKSdkDelegate, VKSdkUIDele
 
     
     @objc func refreshData() {
+        print("HELLOOO")
         self.offset = 0
         self.count = 0
         var users: VKUsersArray!
         let req:VKRequest = VKApi.users().search([VK_API_Q : self.searchController.searchBar.text, VK_API_COUNT : 20, VK_API_OFFSET : self.offset,  VK_API_FIELDS: "photo_100"])
-        DispatchQueue.global(qos: .background).async {
             req.setPreferredLang("ru")
+        DispatchQueue.global(qos: .background).async {
             req.execute(resultBlock: { (response) -> Void in
                 self.users = (response?.parsedModel)! as! VKUsersArray;
                 self.setCount()
-                self.tableView.reloadData()
+                 self.tableView.reloadData()
                 
             }, errorBlock: { (error) -> Void in
                 print("Error2: \(error)")
@@ -113,7 +115,8 @@ class ListTableViewController: UITableViewController, VKSdkDelegate, VKSdkUIDele
             
             DispatchQueue.main.async {
                 // this runs on the main queue
-                self.refreshControl?.endRefreshing()
+               
+                self.RefreshControl?.endRefreshing()
                 
             }
     }
@@ -192,6 +195,7 @@ class ListTableViewController: UITableViewController, VKSdkDelegate, VKSdkUIDele
     }
     
     func vkSdkShouldPresent(_ controller: UIViewController!) {
+    
         self.present(controller, animated: true, completion: nil)
     }
     
