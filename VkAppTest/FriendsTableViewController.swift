@@ -191,13 +191,20 @@ class FriendsTableViewController: UITableViewController {
         if (self.friends != nil && self.friends.count > 0) {
             let user: VKUser = self.friends[UInt(indexPath.row)]
             let url = URL(string:user.photo_100)
-            let data = try? Data(contentsOf: url!)
-            let image: UIImage = UIImage(data: data!)!
-            
-            cell.mainImageView.image = image
+            DispatchQueue.global().async {
+                let data = try? Data(contentsOf: url!)
+                DispatchQueue.main.async {
+                    cell.mainImageView.image = UIImage(data: data!)
+                }
+            }
             cell.mainLabel?.text = user.first_name + " " + user.last_name
+            
         }
         return cell
+    }
+    
+    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 120
     }
     
 

@@ -56,7 +56,7 @@ class ListTableViewController: UITableViewController, VKSdkDelegate, VKSdkUIDele
 
         
         
-        let sdkInstance = VKSdk.initialize(withAppId: AppID);
+        let sdkInstance = VKSdk.initialize(withAppId: self.AppID);
         sdkInstance?.register(self);
         sdkInstance?.uiDelegate = self;
         self.initWorkingBlock { (finished) -> Void in
@@ -135,9 +135,11 @@ class ListTableViewController: UITableViewController, VKSdkDelegate, VKSdkUIDele
             }
             completion(true)
         })
+
     }
     
     override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        print("hello from willdisplay")
         if self.count > 19{
             let lastElement = self.count-1
             if !self.loadMoreStatus && indexPath.row == lastElement {
@@ -230,24 +232,39 @@ class ListTableViewController: UITableViewController, VKSdkDelegate, VKSdkUIDele
 
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        
+        print("Hi from cellForAtPath")
 
 
         let cell = Bundle.main.loadNibNamed("TableViewCell", owner: self, options: nil)?.first as! TableViewCell
         
+        
         if (self.users != nil && self.users.count > 0) {
             let user: VKUser = self.users[UInt(indexPath.row)]
             let url = URL(string:user.photo_100)
-            let data = try? Data(contentsOf: url!)
-            let image: UIImage = UIImage(data: data!)!
+            DispatchQueue.global().async {
+                let data = try? Data(contentsOf: url!)
+                DispatchQueue.main.async {
+                    cell.mainImageView.image = UIImage(data: data!)
+                }
+            }
             
-            cell.mainImageView.image = image
+//            let image: UIImage = UIImage(data: data!)!
+
+//            cell.mainImageView.image = image
             cell.mainLabel?.text = user.first_name + " " + user.last_name
             
             
         }
         
+        
+        
 
         return cell
+    }
+    
+    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 120
     }
     
     func addToArray(masterUsers: VKUsersArray, slaveUsers: VKUsersArray) -> Void {
